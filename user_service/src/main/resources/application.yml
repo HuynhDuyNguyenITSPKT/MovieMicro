@@ -1,7 +1,6 @@
-server:
-  port: ${SERVER_PORT:8082}
-
 spring:
+  config:
+    import: "optional:file:.env[.properties]"
   application:
     name: ${SPRING_APPLICATION_NAME:user-service}
   datasource:
@@ -16,7 +15,8 @@ spring:
     properties:
       hibernate:
         format_sql: ${JPA_FORMAT_SQL:true}
-
+server:
+  port: ${SERVER_PORT:8082}
 eureka:
   client:
     service-url:
