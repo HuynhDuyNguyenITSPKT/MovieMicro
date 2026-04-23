@@ -1,12 +1,10 @@
 spring:
-  config:
-    import: "optional:file:.env[.properties]"
   application:
     name: ${SPRING_APPLICATION_NAME:user-service}
   datasource:
-    url: jdbc:mysql://${DB_HOST}:${DB_PORT}/${DB_NAME}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:user_service_db}
+    username: ${DB_USERNAME:app_user}
+    password: ${DB_PASSWORD:123456}
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
