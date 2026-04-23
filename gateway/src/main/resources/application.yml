@@ -7,16 +7,17 @@ spring:
 
   cloud:
     gateway:
-      routes:
-        - id: auth-service
-          uri: lb://auth-service
-          predicates:
-            - Path=/api/auth/**
+      mvc:
+        routes:
+          - id: auth-service
+            uri: lb://auth-service
+            predicates:
+              - Path=/api/auth/**
 
-        - id: user-service
-          uri: lb://user-service
-          predicates:
-            - Path=/api/users/**
+          - id: user-service
+            uri: lb://user-service
+            predicates:
+              - Path=/api/users/**
 
 eureka:
   client:
