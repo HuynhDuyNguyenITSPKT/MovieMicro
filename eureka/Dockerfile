@@ -1,5 +1,18 @@
+FROM eclipse-temurin:21-jdk-jammy AS builder
+WORKDIR /workspace
+
+COPY .mvn/ .mvn/
+COPY mvnw pom.xml ./
+RUN chmod +x mvnw
+RUN ./mvnw -q -DskipTests dependency:go-offline
+
+COPY src/ src/
+RUN ./mvnw -q clean package -DskipTests
+
 FROM eclipse-temurin:21-jre-jammy
 WORKDIR /app
-COPY target/eureka-0.0.1-SNAPSHOT.jar app.jar
+
+COPY --from=builder /workspace/target/eureka-0.0.1-SNAPSHOT.jar app.jar
+
 EXPOSE 8761
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-jar", "/app/app.jar"]

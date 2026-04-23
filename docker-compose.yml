@@ -31,8 +31,39 @@ services:
       SPRING_APPLICATION_NAME: auth-service
       SERVER_PORT: ${AUTH_PORT}
       EUREKA_DEFAULT_ZONE: ${EUREKA_URL}
+
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      AUTH_DB_NAME: ${AUTH_DB_NAME}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+
+      JPA_DDL_AUTO: ${JPA_DDL_AUTO}
+      JPA_SHOW_SQL: ${JPA_SHOW_SQL}
+      JPA_FORMAT_SQL: ${JPA_FORMAT_SQL}
+
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS}
+
+      OTP_EXPIRATION_MINUTES: ${OTP_EXPIRATION_MINUTES}
+
+      MAIL_HOST: ${MAIL_HOST}
+      MAIL_PORT: ${MAIL_PORT}
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+      MAIL_FROM: ${MAIL_FROM}
+      MAIL_SMTP_AUTH: ${MAIL_SMTP_AUTH}
+      MAIL_SMTP_STARTTLS: ${MAIL_SMTP_STARTTLS}
+
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      USER_SERVICE_BASE_URL: ${USER_SERVICE_BASE_URL}
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
     depends_on:
-      - eureka
+      mysql:
+        condition: service_healthy
+      eureka:
+        condition: service_started
     ports:
       - "${AUTH_PORT}:8081"
 
@@ -54,6 +85,8 @@ services:
       JPA_DDL_AUTO: ${JPA_DDL_AUTO}
       JPA_SHOW_SQL: ${JPA_SHOW_SQL}
       JPA_FORMAT_SQL: ${JPA_FORMAT_SQL}
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
     depends_on:
       mysql:
         condition: service_healthy
@@ -68,6 +101,7 @@ services:
     restart: unless-stopped
     environment:
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: ${EUREKA_URL}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
     depends_on:
       - eureka
       - auth-service
@@ -84,6 +118,9 @@ services:
       - ./frontend_service:/app
       - /app/node_modules
     command: sh -c "npm install && npm run dev -- --host 0.0.0.0 --port 5173"
+    environment:
+      VITE_API_BASE_URL: ${VITE_API_BASE_URL}
+      VITE_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
     depends_on:
       - gateway
     ports:
