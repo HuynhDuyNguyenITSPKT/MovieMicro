@@ -1,24 +1,65 @@
-pull image mysql chạy port 3307 user: root pass: 123456
+# Chạy project bằng 1 file .env duy nhất
 
+## 1) File cấu hình dùng chung
 
-// Cách chạy
+Tất cả service đọc biến từ file `.env` ở thư mục gốc project.
 
-### b1: cd thư muc
+Chuẩn cấu hình hiện tại:
 
-cd tenthumuc
+- Service kết nối MySQL trong Docker bằng `DB_HOST=mysql`, `DB_PORT=3306`
+- Kết nối MySQL từ máy host bằng `localhost:${MYSQL_HOST_PORT}` (mặc định `3307`)
+- App dùng user DB riêng: `DB_USERNAME=app_user` (không dùng root)
+- `database/init.sql` sẽ tạo DB và cấp quyền cho `app_user` khi khởi tạo volume mới
 
-ví dụ:  cd eureka chạy mvn clean package -DskipTests
+## 2) Build jar trước khi compose up
 
-### b2 : build image
+Chạy lần lượt:
 
-docker build -t <image-name> .
+```bash
+cd eureka && mvn clean package -DskipTests
+cd ../auth-service && mvn clean package -DskipTests
+cd ../user_service && mvn clean package -DskipTests
+cd ../gateway && mvn clean package -DskipTests
+```
 
-ví dụ: docker build -t eureka .
+## 3) Chạy hệ thống
 
-### b3 : chạy container
+Lần đầu hoặc sau khi đổi code backend:
 
-docker run -d -p <host-port>:<container-port> --name <container-name> <image-name>
+```bash
+docker compose up -d --build
+```
 
-ví dụ: docker run -d -p 8761:8761 --name eurekaContainer eureka
+Những lần sau:
 
-### nếu có thay đổi thì chạy
+```bash
+docker compose up -d
+```
+
+Tắt hệ thống:
+
+```bash
+docker compose down
+```
+
+Xóa luôn volume database:
+
+```bash
+docker compose down -v
+```
+
+Lưu ý: nếu bạn chỉnh `database/init.sql`, cần chạy lại `docker compose down -v` để MySQL khởi tạo lại dữ liệu từ đầu.
+
+## 4) Chạy lại riêng user-service
+
+```bash
+docker compose up -d --build user-service
+```
+
+## 5) Xem log để debug
+
+```bash
+docker compose logs -f user-service
+docker compose logs -f mysql
+docker compose logs -f gateway
+```

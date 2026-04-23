@@ -1,0 +1,93 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: movieticket-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    ports:
+      - "${MYSQL_HOST_PORT}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  eureka:
+    build: ./eureka
+    container_name: movieticket-eureka
+    restart: unless-stopped
+    ports:
+      - "8761:8761"
+
+  auth-service:
+    build: ./auth-service
+    container_name: movieticket-auth-service
+    restart: unless-stopped
+    environment:
+      SPRING_APPLICATION_NAME: auth-service
+      SERVER_PORT: ${AUTH_PORT}
+      EUREKA_DEFAULT_ZONE: ${EUREKA_URL}
+    depends_on:
+      - eureka
+    ports:
+      - "${AUTH_PORT}:8081"
+
+  user-service:
+    build: ./user_service
+    container_name: movieticket-user-service
+    restart: unless-stopped
+    environment:
+      SPRING_APPLICATION_NAME: user-service
+      SERVER_PORT: ${USER_PORT}
+      EUREKA_DEFAULT_ZONE: ${EUREKA_URL}
+
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_NAME: ${DB_NAME}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+
+      JPA_DDL_AUTO: ${JPA_DDL_AUTO}
+      JPA_SHOW_SQL: ${JPA_SHOW_SQL}
+      JPA_FORMAT_SQL: ${JPA_FORMAT_SQL}
+    depends_on:
+      mysql:
+        condition: service_healthy
+      eureka:
+        condition: service_started
+    ports:
+      - "${USER_PORT}:8082"
+
+  gateway:
+    build: ./gateway
+    container_name: movieticket-gateway
+    restart: unless-stopped
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: ${EUREKA_URL}
+    depends_on:
+      - eureka
+      - auth-service
+      - user-service
+    ports:
+      - "${GATEWAY_PORT}:8080"
+
+  frontend:
+    image: node:20-alpine
+    container_name: movieticket-frontend
+    working_dir: /app
+    restart: unless-stopped
+    volumes:
+      - ./frontend_service:/app
+      - /app/node_modules
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0 --port 5173"
+    depends_on:
+      - gateway
+    ports:
+      - "5173:5173"
+
+volumes:
+  mysql_data:
