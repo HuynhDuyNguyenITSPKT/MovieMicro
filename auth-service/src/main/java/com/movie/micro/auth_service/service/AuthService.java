@@ -3,6 +3,7 @@ package com.movie.micro.auth_service.service;
 import com.movie.micro.auth_service.dto.AuthResponse;
 import com.movie.micro.auth_service.dto.GoogleLoginRequest;
 import com.movie.micro.auth_service.dto.LoginRequest;
+import com.movie.micro.auth_service.dto.RefreshTokenRequest;
 import com.movie.micro.auth_service.dto.RegisterRequestOtp;
 import com.movie.micro.auth_service.dto.VerifyRegisterOtpRequest;
 import com.movie.micro.auth_service.config.OtpProperties;
@@ -170,6 +171,19 @@ public class AuthService {
         return buildAuthResponse(account);
     }
 
+    @Transactional(readOnly = true)
+    public AuthResponse refreshAccessToken(RefreshTokenRequest request) {
+        Long accountId = jwtService.extractAccountIdFromRefreshToken(request.refreshToken());
+        Account account = accountRepository.findById(accountId)
+                .orElseThrow(() -> new IllegalArgumentException("Account not found"));
+
+        if (!account.isActive()) {
+            throw new IllegalArgumentException("Account is inactive");
+        }
+
+        return buildAuthResponse(account);
+    }
+
     private Account createGoogleAccount(GoogleTokenVerifier.GoogleProfile profile) {
         Account account = new Account();
         account.setEmail(normalizeEmail(profile.email()));
@@ -194,10 +208,15 @@ public class AuthService {
     }
 
     private AuthResponse buildAuthResponse(Account account) {
+        String accessToken = jwtService.generateAccessToken(account);
+        String refreshToken = jwtService.generateRefreshToken(account);
+
         return new AuthResponse(
-                jwtService.generateAccessToken(account),
+            accessToken,
+            refreshToken,
                 "Bearer",
-                jwtService.getExpirationFromNow(),
+            jwtService.getAccessExpirationFromNow(),
+            jwtService.getRefreshExpirationFromNow(),
                 account.getId(),
                 account.getEmail(),
                 account.getUsername(),

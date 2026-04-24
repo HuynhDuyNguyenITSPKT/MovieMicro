@@ -4,12 +4,29 @@ import { loginWithGoogle, loginWithPassword } from '../services/authService'
 const GSI_SCRIPT_SRC = 'https://accounts.google.com/gsi/client'
 const GSI_INIT_FLAG = '__movieticketGsiInitialized'
 
-function LoginPage({ onSwitchRegister }) {
+function LoginPage({ onSwitchRegister, onAuthSuccess }) {
   const [form, setForm] = useState({ login: '', password: '' })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [token, setToken] = useState('')
   const googleButtonRef = useRef(null)
+
+  const handleGoogleCredential = async (credential) => {
+    if (!credential) {
+      setError('Không nhận được Google token')
+      return
+    }
+
+    setLoading(true)
+    setError('')
+    try {
+      const data = await loginWithGoogle(credential)
+      onAuthSuccess?.(data)
+    } catch (err) {
+      setError(err?.response?.data?.message || 'Đăng nhập Google thất bại')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   useEffect(() => {
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || ''
@@ -76,27 +93,9 @@ function LoginPage({ onSwitchRegister }) {
 
     try {
       const data = await loginWithPassword(form)
-      setToken(data.accessToken || '')
+      onAuthSuccess?.(data)
     } catch (err) {
       setError(err?.response?.data?.message || 'Đăng nhập thất bại')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleGoogleCredential = async (credential) => {
-    if (!credential) {
-      setError('Không nhận được Google token')
-      return
-    }
-
-    setLoading(true)
-    setError('')
-    try {
-      const data = await loginWithGoogle(credential)
-      setToken(data.accessToken || '')
-    } catch (err) {
-      setError(err?.response?.data?.message || 'Đăng nhập Google thất bại')
     } finally {
       setLoading(false)
     }
@@ -158,12 +157,6 @@ function LoginPage({ onSwitchRegister }) {
             </button>
           </p>
 
-          {token ? (
-            <div className="token-panel">
-              <p>JWT đã nhận:</p>
-              <textarea readOnly value={token} />
-            </div>
-          ) : null}
         </div>
       </section>
     </main>

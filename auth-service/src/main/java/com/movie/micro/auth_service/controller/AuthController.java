@@ -4,6 +4,7 @@ import com.movie.micro.auth_service.dto.ApiMessageResponse;
 import com.movie.micro.auth_service.dto.AuthResponse;
 import com.movie.micro.auth_service.dto.GoogleLoginRequest;
 import com.movie.micro.auth_service.dto.LoginRequest;
+import com.movie.micro.auth_service.dto.RefreshTokenRequest;
 import com.movie.micro.auth_service.dto.RegisterRequestOtp;
 import com.movie.micro.auth_service.dto.VerifyRegisterOtpRequest;
 import com.movie.micro.auth_service.service.AuthService;
@@ -45,5 +46,10 @@ public class AuthController {
     @PostMapping("/google-login")
     public AuthResponse googleLogin(@Valid @RequestBody GoogleLoginRequest request) {
         return authService.loginWithGoogle(request);
+    }
+
+    @PostMapping("/refresh")
+    public AuthResponse refresh(@Valid @RequestBody RefreshTokenRequest request) {
+        return authService.refreshAccessToken(request);
     }
 }

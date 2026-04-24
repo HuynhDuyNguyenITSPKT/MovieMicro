@@ -1,4 +1,4 @@
-function Header({ currentView, onNavigate }) {
+function Header({ currentView, onNavigate, isAuthenticated, onLogout }) {
   return (
     <header className="site-header">
       <div className="container header-row">
@@ -23,8 +23,21 @@ function Header({ currentView, onNavigate }) {
           </button>
         </nav>
 
-        <div>
-          {currentView === 'home' ? (
+        <div className="header-actions">
+          {isAuthenticated ? (
+            <>
+              <button
+                type="button"
+                className={currentView === 'profile' ? 'nav-btn active' : 'nav-btn'}
+                onClick={() => onNavigate('profile')}
+              >
+                Hồ sơ
+              </button>
+              <button type="button" className="action-btn" onClick={onLogout}>
+                Đăng xuất
+              </button>
+            </>
+          ) : currentView === 'home' ? (
             <button type="button" className="action-btn" onClick={() => onNavigate('login')}>
               Đăng Nhập
             </button>

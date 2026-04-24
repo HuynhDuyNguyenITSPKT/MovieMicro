@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { requestRegisterOtp, verifyRegisterOtp } from '../services/authService'
 
-function RegisterPage({ onSwitchLogin }) {
+function RegisterPage({ onSwitchLogin, onAuthSuccess }) {
   const [registerForm, setRegisterForm] = useState({
     username: '',
     fullName: '',
@@ -16,7 +16,6 @@ function RegisterPage({ onSwitchLogin }) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
-  const [token, setToken] = useState('')
 
   const submitRegister = async (event) => {
     event.preventDefault()
@@ -58,8 +57,8 @@ function RegisterPage({ onSwitchLogin }) {
         email: registerForm.email,
         otp,
       })
-      setToken(data.accessToken || '')
-      setSuccess('Đăng ký thành công. Bạn đã được đăng nhập!')
+      setSuccess('Đăng ký thành công. Đang chuyển tới trang hồ sơ...')
+      onAuthSuccess?.(data)
     } catch (err) {
       setError(err?.response?.data?.message || 'Xác thực OTP thất bại')
     } finally {
@@ -148,12 +147,6 @@ function RegisterPage({ onSwitchLogin }) {
             </button>
           </p>
 
-          {token ? (
-            <div className="token-panel">
-              <p>JWT đã nhận:</p>
-              <textarea readOnly value={token} />
-            </div>
-          ) : null}
         </div>
       </section>
     </main>
